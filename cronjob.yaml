@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: curl-job
+spec:
+  schedule: "* * * * *"  # Since the cron job runs every minute of every day, 
+                         # effectively it will always be waiting for the next 
+                         # minute to execute, and practically it will never execute.
+  suspend: true
+  jobTemplate:
+    spec:
+      parallelism: 1
+      backoffLimit: 1
+      template:
+        metadata:
+          labels:
+            cronjob-template-id: "curl-job-template"
+        spec:
+          containers:
+          - name: curl-container
+            image: curlimages/curl:8.7.1
+            # command: ["sleep 15 && exit 120"]
+            command: ["export"]
+          restartPolicy: Never
