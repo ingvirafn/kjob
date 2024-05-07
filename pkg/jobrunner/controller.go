@@ -13,8 +13,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	kubeInformers "k8s.io/client-go/informers"
+	cronJobInformers "k8s.io/client-go/informers/batch/v1"
 	jobInformers "k8s.io/client-go/informers/batch/v1"
-	cronJobInformers "k8s.io/client-go/informers/batch/v1beta1"
 	podInformers "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
@@ -33,10 +33,10 @@ func NewJobController(client *kubernetes.Clientset, namespace string, stopChan <
 	factory := kubeInformers.NewSharedInformerFactoryWithOptions(client, 5*time.Second, kubeInformers.WithNamespace(namespace))
 	timeoutError := "error: failed to wait for %s cache to sync"
 
-	if _, err := client.BatchV1beta1().CronJobs(namespace).List(context.TODO(), metav1.ListOptions{Limit: 1}); err != nil {
+	if _, err := client.BatchV1().CronJobs(namespace).List(context.TODO(), metav1.ListOptions{Limit: 1}); err != nil {
 		return nil, fmt.Errorf("error: can't list cron jobs %w", err)
 	}
-	cronJobsInformer := factory.Batch().V1beta1().CronJobs()
+	cronJobsInformer := factory.Batch().V1().CronJobs()
 	go cronJobsInformer.Informer().Run(stopChan)
 	if ok := cache.WaitForCacheSync(stopChan, cronJobsInformer.Informer().HasSynced); !ok {
 		return nil, fmt.Errorf(timeoutError, "CronJobs")
