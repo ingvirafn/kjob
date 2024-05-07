@@ -31,6 +31,8 @@ var (
 	cleanup    bool
 	timeout    time.Duration
 	shell      string
+	envs       []string
+	pullAlways bool
 )
 
 func init() {
@@ -44,7 +46,10 @@ func init() {
 	runJobCmd.Flags().StringVarP(&command, "command", "c", "", "override job command")
 	runJobCmd.Flags().StringVarP(&shell, "shell", "", "sh", "command shell")
 	runJobCmd.Flags().BoolVarP(&cleanup, "cleanup", "", true, "delete job and pods after completion")
+	runJobCmd.Flags().BoolVarP(&pullAlways, "pullalways", "a", true, "configure the container spec to \"PullAlways\" the image")
 	runJobCmd.Flags().DurationVarP(&timeout, "timeout", "", time.Minute, "timeout for Kubernetes operations")
+	runJobCmd.Flags().StringSliceVarP(&envs, "env", "e", []string{}, "environment variables to forward from the executing shell to the containers")
+
 	rootCmd.AddCommand(runJobCmd)
 }
 
@@ -85,6 +90,8 @@ func runJob(cmd *cobra.Command, args []string) error {
 		Timeout:      timeout,
 		Command:      command,
 		CommandShell: shell,
+		Envs:         envs,
+		PullAlways:   pullAlways,
 	}
 
 	result, err := ctrl.Run(ctx, job, cleanup)

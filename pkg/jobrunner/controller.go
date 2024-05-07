@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"time"
 
 	batchv1 "k8s.io/api/batch/v1"
@@ -161,10 +162,26 @@ func (ctrl *JobController) createJob(ctx context.Context, task Job, spec batchv1
 			task.Command,
 		}
 	}
+	// set environment variables (TODO: should not replace, should append)
+	if len(task.Envs) != 0 {
+		// log.Printf("Adding environment variables")
+		newEnvs := make([]corev1.EnvVar, len(task.Envs))
+
+		for i, ee := range task.Envs {
+			// log.Printf("Adding environment variables: %s. Value: %s", ee, os.Getenv(ee))
+			newEnvs[i] = corev1.EnvVar{Name: ee, Value: os.Getenv(ee)}
+		}
+
+		spec.Template.Spec.Containers[0].Env = newEnvs
+	}
 
 	// override backoff
 	if spec.BackoffLimit == nil {
 		spec.BackoffLimit = &task.BackoffLimit
+	}
+
+	if task.PullAlways {
+		spec.Template.Spec.Containers[0].ImagePullPolicy = corev1.PullAlways
 	}
 
 	job := &batchv1.Job{

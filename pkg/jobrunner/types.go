@@ -21,6 +21,12 @@ type Job struct {
 	// CommandShell specifies the linux shell that executes the command; defaults to sh.
 	// +optional
 	CommandShell string `json:"commandShell,omitempty"`
+
+	// Envs specifies the environment variables to
+	// +optional
+	Envs []string `json:"envs,omitempty"`
+
+	PullAlways bool `json:"pullAlways,omitempty"`
 }
 
 // JobTemplateRef holds the reference to a Kubernetes object.
