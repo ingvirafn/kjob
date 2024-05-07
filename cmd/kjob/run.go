@@ -10,8 +10,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/ingvirafn/kjob/pkg/jobrunner"
 	"github.com/spf13/cobra"
-	"github.com/stefanprodan/kjob/pkg/jobrunner"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/tools/clientcmd"

@@ -1,4 +1,4 @@
-module github.com/stefanprodan/kjob
+module github.com/ingvirafn/kjob
 
 go 1.22.0
 
