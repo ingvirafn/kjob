@@ -41,7 +41,7 @@ func init() {
 	} else {
 		runJobCmd.Flags().StringVarP(&kubeconfig, "kubeconfig", "", "", "absolute path to the kubeconfig file")
 	}
-	runJobCmd.Flags().StringVarP(&template, "template", "t", "", "cron job template name")
+	runJobCmd.Flags().StringVarP(&template, "template", "t", "", "cron job / job template name")
 	runJobCmd.Flags().StringVarP(&namespace, "namespace", "n", "default", "namespace of the cron job template")
 	runJobCmd.Flags().StringVarP(&command, "command", "c", "", "override job command")
 	runJobCmd.Flags().StringVarP(&shell, "shell", "", "sh", "command shell")

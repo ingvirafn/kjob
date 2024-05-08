@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: cowsy-job
+spec:
+  suspend: true
+  parallelism: 1
+  backoffLimit: 1
+  template:
+    spec:
+      containers:
+      - name: curl-container
+        image: curlimages/curl:8.7.1
+        # command: ["sleep 15 && exit 120"]
+        command: ["curl"]
+        args:
+        - "-L"
+        - "-v"
+        - "https://curl.haxx.se"
+      restartPolicy: Never

@@ -71,13 +71,25 @@ func NewJobController(client *kubernetes.Clientset, namespace string, stopChan <
 }
 
 func (ctrl *JobController) Run(ctx context.Context, task Job, cleanup bool) (*JobResult, error) {
-	cronjob, err := ctrl.cronJobInformer.Lister().CronJobs(task.TemplateRef.Namespace).Get(task.TemplateRef.Name)
-	if err != nil {
-		return nil, fmt.Errorf("error: %s.%s get failed: %w",
-			task.TemplateRef.Name, task.TemplateRef.Namespace, err)
+	suspendedjob, err := ctrl.jobInformer.Lister().Jobs(task.TemplateRef.Namespace).Get(task.TemplateRef.Name)
+	var j batchv1.JobSpec
+
+	if err == nil {
+		j = suspendedjob.Spec
+		j.Template.Labels = nil //make(map[string]string)
+		j.Selector = nil
+		sus := false
+		j.Suspend = &sus
+	} else {
+		cronjob, err := ctrl.cronJobInformer.Lister().CronJobs(task.TemplateRef.Namespace).Get(task.TemplateRef.Name)
+		if err != nil {
+			return nil, fmt.Errorf("error: %s.%s get failed: %w",
+				task.TemplateRef.Name, task.TemplateRef.Namespace, err)
+		}
+		j = cronjob.Spec.JobTemplate.Spec
 	}
 
-	job, err := ctrl.createJob(ctx, task, cronjob.Spec.JobTemplate.Spec)
+	job, err := ctrl.createJob(ctx, task, j)
 	if err != nil {
 		return nil, fmt.Errorf("error: %s.%s create job failed: %w",
 			task.TemplateRef.Name, task.TemplateRef.Namespace, err)

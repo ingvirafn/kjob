@@ -25,6 +25,10 @@ Run the job:
 ./kjob run --template curl-job --command "export" --env NAME --env PWD --cleanup=true --pullalways --timeout=2m
 ```
 
+Or
+```bash
+./kjob run --template cowsy-job --command "export" --env NAME --env PWD --cleanup=true --pullalways --timeout=2m
+```
 
 List of available flags:
 
