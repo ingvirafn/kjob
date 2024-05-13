@@ -5,9 +5,8 @@ on:
     tags:
       - '*'
 
-permissions:
-   contents: write # needed to write releases
-   
+permissions: write-all
+
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
