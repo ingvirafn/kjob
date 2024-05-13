@@ -25,6 +25,8 @@ jobs:
         run: cd /tmp && curl -sSL ${GH_REL_URL} | tar xz && sudo mv github-release-notes /usr/local/bin/
       - name: Generate release notes
         run: github-release-notes -org ingvirafn -repo kjob -since-latest-release > /tmp/release.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v1
         with:
