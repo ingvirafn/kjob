@@ -279,11 +279,9 @@ func (ctrl *JobController) createJob(ctx context.Context, task Job, spec batchv1
 		spec.Template.Spec.Containers[0].ImagePullPolicy = corev1.PullAlways
 	}
 
-	// Define the TTL duration in seconds (e.g., 120 seconds)
-	ttlSecondsAfterFinished := int32(120)
-
-	// Add the ttlSecondsAfterFinished field to the job spec
-	spec.TTLSecondsAfterFinished = &ttlSecondsAfterFinished
+	if task.TtlSecondsAfterFinished > 0 {
+		spec.TTLSecondsAfterFinished = &task.TtlSecondsAfterFinished
+	}
 
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{

@@ -33,6 +33,8 @@ type Job struct {
 	// JobInstanceName specifies the name of the job instance.
 	// +optional
 	JobInstanceName string `json:"jobInstanceName,omitempty"`
+
+	TtlSecondsAfterFinished int32 `json:"ttlSecondsAfterFinished,omitempty"`
 }
 
 // JobTemplateRef holds the reference to a Kubernetes object.

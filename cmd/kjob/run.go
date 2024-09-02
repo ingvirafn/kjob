@@ -40,6 +40,7 @@ var (
 
 	cleanup    bool
 	timeout    time.Duration
+	ttl        int32
 	shell      string
 	envs       []string
 	pullAlways bool
@@ -65,9 +66,11 @@ func init() {
 	runJobCmd.Flags().StringVarP(&jin, "jin", "", "", "Job instance name")
 	runJobCmd.Flags().BoolVarP(&pjs, "printjobspec", "", false, "Print job spec before posting job")
 
-	runJobCmd.Flags().BoolVarP(&cleanup, "cleanup", "", true, "delete job and pods after completion")
+	runJobCmd.Flags().BoolVarP(&cleanup, "cleanup", "", false, "delete job and pods after completion")
 	runJobCmd.Flags().BoolVarP(&pullAlways, "pullalways", "a", true, "configure the container spec to \"PullAlways\" the image")
 	runJobCmd.Flags().DurationVarP(&timeout, "timeout", "", time.Minute, "timeout for Kubernetes operations")
+	runJobCmd.Flags().Int32Var(&ttl, "ttl", int32(0), "ttl seconds after finished (how long the job stays in kube until it is deleted)")
+
 	runJobCmd.Flags().StringSliceVarP(&envs, "env", "e", []string{}, "environment variables to forward from the executing shell to the containers")
 
 	rootCmd.AddCommand(runJobCmd)
@@ -113,14 +116,15 @@ func runJob(cmd *cobra.Command, args []string) error {
 			Kind:       kind,
 			Crd:        crd,
 		},
-		BackoffLimit:    0,
-		Timeout:         timeout,
-		Command:         command,
-		CommandShell:    shell,
-		PrintJobSpec:    pjs,
-		Envs:            envs,
-		PullAlways:      pullAlways,
-		JobInstanceName: jin,
+		BackoffLimit:            0,
+		Timeout:                 timeout,
+		Command:                 command,
+		CommandShell:            shell,
+		PrintJobSpec:            pjs,
+		Envs:                    envs,
+		PullAlways:              pullAlways,
+		JobInstanceName:         jin,
+		TtlSecondsAfterFinished: ttl,
 	}
 
 	result, err := ctrl.Run(ctx, job, cleanup)
