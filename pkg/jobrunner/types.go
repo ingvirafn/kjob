@@ -27,6 +27,8 @@ type Job struct {
 	Envs []string `json:"envs,omitempty"`
 
 	PullAlways bool `json:"pullAlways,omitempty"`
+
+	PrintJobSpec bool `json:"printJobSpec,omitempty"`
 }
 
 // JobTemplateRef holds the reference to a Kubernetes object.
@@ -45,6 +47,8 @@ type JobTemplateRef struct {
 
 	// Kind of the Kubernetes object.
 	Kind string `json:"kind,omitempty"`
+
+	Crd bool `json:"crd,omitempty"`
 }
 
 // JobResult describes the result of a Kubernetes job execution.

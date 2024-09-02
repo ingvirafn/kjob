@@ -34,6 +34,7 @@ var (
 	group      string
 	apiVersion string
 	kind       string
+	pjs        bool
 
 	cleanup    bool
 	timeout    time.Duration
@@ -58,6 +59,7 @@ func init() {
 	runJobCmd.Flags().StringVarP(&apiVersion, "apiVersion", "", "", "API version of the CRD object")
 	runJobCmd.Flags().StringVarP(&kind, "kind", "", "", "Kind of the CRD object")
 	runJobCmd.Flags().BoolVarP(&crd, "crd", "", false, "use CustomResourceDefinition")
+	runJobCmd.Flags().BoolVarP(&pjs, "printjobspec", "", false, "Print job spec before posting job")
 
 	runJobCmd.Flags().BoolVarP(&cleanup, "cleanup", "", true, "delete job and pods after completion")
 	runJobCmd.Flags().BoolVarP(&pullAlways, "pullalways", "a", true, "configure the container spec to \"PullAlways\" the image")
@@ -90,7 +92,7 @@ func runJob(cmd *cobra.Command, args []string) error {
 		log.Fatalf("Error building kubernetes client: %v", err)
 	}
 
-	ctrl, err := jobrunner.NewJobController(client, namespace, stopCh)
+	ctrl, err := jobrunner.NewJobController(config, client, namespace, stopCh)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -100,13 +102,18 @@ func runJob(cmd *cobra.Command, args []string) error {
 
 	job := jobrunner.Job{
 		TemplateRef: jobrunner.JobTemplateRef{
-			Name:      template,
-			Namespace: namespace,
+			Name:       template,
+			Namespace:  namespace,
+			Group:      group,
+			APIVersion: apiVersion,
+			Kind:       kind,
+			Crd:        crd,
 		},
 		BackoffLimit: 0,
 		Timeout:      timeout,
 		Command:      command,
 		CommandShell: shell,
+		PrintJobSpec: pjs,
 		Envs:         envs,
 		PullAlways:   pullAlways,
 	}
@@ -118,6 +125,8 @@ func runJob(cmd *cobra.Command, args []string) error {
 		}
 		if result.Status != nil && result.Status.Failed {
 			log.Fatalf("error: %s", result.Status.Message)
+		} else {
+			log.Printf("> Job %s/%s succeeded", result.Namespace, result.Name)
 		}
 	}
 	if err != nil {
