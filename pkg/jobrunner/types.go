@@ -29,6 +29,10 @@ type Job struct {
 	PullAlways bool `json:"pullAlways,omitempty"`
 
 	PrintJobSpec bool `json:"printJobSpec,omitempty"`
+
+	// JobInstanceName specifies the name of the job instance.
+	// +optional
+	JobInstanceName string `json:"jobInstanceName,omitempty"`
 }
 
 // JobTemplateRef holds the reference to a Kubernetes object.

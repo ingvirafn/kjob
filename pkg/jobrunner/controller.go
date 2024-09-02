@@ -230,7 +230,8 @@ func getCustomResourceInstance(client dynamic.Interface, gvr schema.GroupVersion
 	if err != nil || !found {
 		log.Fatalf("Failed to retrieve spec from custom resource: %v", err)
 	}
-	fmt.Printf("Spec: %v\n", spec)
+
+	// fmt.Printf("Spec: %v\n", spec)
 
 	specJSON, err := json.Marshal(spec)
 	if err != nil {
@@ -286,11 +287,15 @@ func (ctrl *JobController) createJob(ctx context.Context, task Job, spec batchv1
 
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: task.TemplateRef.Name + "-",
-			Namespace:    task.TemplateRef.Namespace,
+			Namespace: task.TemplateRef.Namespace,
 		},
-
 		Spec: spec,
+	}
+
+	if task.JobInstanceName != "" {
+		job.ObjectMeta.Name = task.JobInstanceName
+	} else {
+		job.ObjectMeta.GenerateName = task.TemplateRef.Name + "-"
 	}
 
 	return ctrl.client.BatchV1().Jobs(task.TemplateRef.Namespace).Create(ctx, job, metav1.CreateOptions{})

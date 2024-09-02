@@ -36,6 +36,8 @@ var (
 	kind       string
 	pjs        bool
 
+	jin string
+
 	cleanup    bool
 	timeout    time.Duration
 	shell      string
@@ -59,6 +61,8 @@ func init() {
 	runJobCmd.Flags().StringVarP(&apiVersion, "apiVersion", "", "", "API version of the CRD object")
 	runJobCmd.Flags().StringVarP(&kind, "kind", "", "", "Kind of the CRD object")
 	runJobCmd.Flags().BoolVarP(&crd, "crd", "", false, "use CustomResourceDefinition")
+
+	runJobCmd.Flags().StringVarP(&jin, "jin", "", "", "Job instance name")
 	runJobCmd.Flags().BoolVarP(&pjs, "printjobspec", "", false, "Print job spec before posting job")
 
 	runJobCmd.Flags().BoolVarP(&cleanup, "cleanup", "", true, "delete job and pods after completion")
@@ -109,13 +113,14 @@ func runJob(cmd *cobra.Command, args []string) error {
 			Kind:       kind,
 			Crd:        crd,
 		},
-		BackoffLimit: 0,
-		Timeout:      timeout,
-		Command:      command,
-		CommandShell: shell,
-		PrintJobSpec: pjs,
-		Envs:         envs,
-		PullAlways:   pullAlways,
+		BackoffLimit:    0,
+		Timeout:         timeout,
+		Command:         command,
+		CommandShell:    shell,
+		PrintJobSpec:    pjs,
+		Envs:            envs,
+		PullAlways:      pullAlways,
+		JobInstanceName: jin,
 	}
 
 	result, err := ctrl.Run(ctx, job, cleanup)
