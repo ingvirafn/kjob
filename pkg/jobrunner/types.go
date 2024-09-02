@@ -36,6 +36,15 @@ type JobTemplateRef struct {
 
 	// Namespace of the Kubernetes object.
 	Namespace string `json:"namespace"`
+
+	// Group of the Kubernetes object.
+	Group string `json:"group,omitempty"`
+
+	// APIVersion of the Kubernetes object.
+	APIVersion string `json:"apiVersion,omitempty"`
+
+	// Kind of the Kubernetes object.
+	Kind string `json:"kind,omitempty"`
 }
 
 // JobResult describes the result of a Kubernetes job execution.

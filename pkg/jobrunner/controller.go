@@ -3,8 +3,10 @@ package jobrunner
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"time"
 
@@ -12,13 +14,18 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/dynamic"
 	kubeInformers "k8s.io/client-go/informers"
 	cronJobInformers "k8s.io/client-go/informers/batch/v1"
 	jobInformers "k8s.io/client-go/informers/batch/v1"
 	podInformers "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 type JobController struct {
@@ -31,6 +38,7 @@ type JobController struct {
 
 // NewJobController starts Kubernetes informers for the specified namespace and returns a job controller.
 func NewJobController(client *kubernetes.Clientset, namespace string, stopChan <-chan struct{}) (*JobController, error) {
+
 	factory := kubeInformers.NewSharedInformerFactoryWithOptions(client, 5*time.Second, kubeInformers.WithNamespace(namespace))
 	timeoutError := "error: failed to wait for %s cache to sync"
 
@@ -70,7 +78,70 @@ func NewJobController(client *kubernetes.Clientset, namespace string, stopChan <
 	}, nil
 }
 
+func getcrd(group string, ver string, kind string, namespace string, name string) {
+	// Load kubeconfig file
+	kubeconfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		clientcmd.NewDefaultClientConfigLoadingRules(),
+		&clientcmd.ConfigOverrides{},
+	)
+
+	config, err := kubeconfig.ClientConfig()
+	if err != nil {
+		log.Fatalf("Failed to get Kubernetes config: %v", err)
+	}
+
+	// Create dynamic client
+	dynamicClient, err := dynamic.NewForConfig(config)
+	if err != nil {
+		log.Fatalf("Failed to create dynamic Kubernetes client: %v", err)
+	}
+
+	// Define the GVR (GroupVersionResource) for your custom resource
+	gvr := schema.GroupVersionResource{
+		Group:    group,
+		Version:  ver,
+		Resource: kind,
+	}
+
+	// Get a specific instance of the custom resource
+	getCustomResourceInstance(dynamicClient, gvr, namespace, name)
+}
+
+func getCustomResourceInstance(client dynamic.Interface, gvr schema.GroupVersionResource, namespace string, name string) batchv1.Job {
+	// Get the CRD instance
+	log.Printf("Getting custom resource instance %s/%s/%s", gvr.Resource, namespace, name)
+	crdInstance, err := client.Resource(gvr).Namespace(namespace).Get(context.TODO(), name, v1.GetOptions{})
+	if err != nil {
+		log.Fatalf("Failed to get custom resource instance: %v", err)
+	}
+
+	// Print the custom resource instance details
+	fmt.Printf("Custom Resource Instance: %v\n", crdInstance)
+
+	// Access specific fields, if needed
+	spec, found, err := unstructured.NestedMap(crdInstance.Object, "spec")
+	if err != nil || !found {
+		log.Fatalf("Failed to retrieve spec from custom resource: %v", err)
+	}
+	fmt.Printf("Spec: %v\n", spec)
+
+	specJSON, err := json.Marshal(spec)
+	if err != nil {
+		log.Fatalf("Failed to retrieve spec from custom resource: %v", err)
+	}
+
+	var job batchv1.Job
+	err = json.Unmarshal(specJSON, &job)
+
+	return job
+
+}
+
 func (ctrl *JobController) Run(ctx context.Context, task Job, cleanup bool) (*JobResult, error) {
+
+	// Get the job spec from the CRD
+	getcrd(task.TemplateRef.Group, task.TemplateRef.APIVersion, task.TemplateRef.Kind, task.TemplateRef.Namespace, task.TemplateRef.Name)
+
 	suspendedjob, err := ctrl.jobInformer.Lister().Jobs(task.TemplateRef.Namespace).Get(task.TemplateRef.Name)
 	var j batchv1.JobSpec
 

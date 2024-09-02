@@ -28,6 +28,13 @@ var (
 	template   string
 	namespace  string
 	command    string
+
+	//
+	crd        bool
+	group      string
+	apiVersion string
+	kind       string
+
 	cleanup    bool
 	timeout    time.Duration
 	shell      string
@@ -45,6 +52,13 @@ func init() {
 	runJobCmd.Flags().StringVarP(&namespace, "namespace", "n", "default", "namespace of the cron job template")
 	runJobCmd.Flags().StringVarP(&command, "command", "c", "", "override job command")
 	runJobCmd.Flags().StringVarP(&shell, "shell", "", "sh", "command shell")
+
+	// CRD flags
+	runJobCmd.Flags().StringVarP(&group, "group", "", "", "Group of the CRD object")
+	runJobCmd.Flags().StringVarP(&apiVersion, "apiVersion", "", "", "API version of the CRD object")
+	runJobCmd.Flags().StringVarP(&kind, "kind", "", "", "Kind of the CRD object")
+	runJobCmd.Flags().BoolVarP(&crd, "crd", "", false, "use CustomResourceDefinition")
+
 	runJobCmd.Flags().BoolVarP(&cleanup, "cleanup", "", true, "delete job and pods after completion")
 	runJobCmd.Flags().BoolVarP(&pullAlways, "pullalways", "a", true, "configure the container spec to \"PullAlways\" the image")
 	runJobCmd.Flags().DurationVarP(&timeout, "timeout", "", time.Minute, "timeout for Kubernetes operations")
@@ -59,6 +73,9 @@ func runJob(cmd *cobra.Command, args []string) error {
 	}
 	if namespace == "" {
 		return fmt.Errorf("--namespace is required")
+	}
+	if crd && (group == "" || apiVersion == "" || kind == "") {
+		return fmt.Errorf("--group, --apiVersion and --kind are required for CRD")
 	}
 
 	stopCh := setupSignalHandler()
