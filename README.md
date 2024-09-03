@@ -35,22 +35,29 @@ List of available flags:
 ```text
 $ kjob run --help
 Usage:
-  kjob run -t cron-job-template -n namespace [flags]
+  kjob run -t cron-job-template/job-name/crd-name -n namespace [flags]
 
 Examples:
   run --template curl --command "curl -sL flagger.app/index.yaml" --cleanup=false --timeout=2m
 
 Flags:
-      --cleanup             delete job and pods after completion (default true)
+      --apiVersion string   API version of the CRD object
+      --cleanup             delete job and pods after completion
   -c, --command string      override job command
+      --crd                 use CustomResourceDefinition
   -e, --env strings         environment variables to forward from the executing shell to the containers
+      --group string        Group of the CRD object
   -h, --help                help for run
-      --kubeconfig string   path to the kubeconfig file (default "/home/ingvirafn/.kube/config")
+      --jin string          Job instance name
+      --kind string         Kind of the CRD object
+      --kubeconfig string   path to the kubeconfig file (default "/home/ingvirg/.kube/config")
   -n, --namespace string    namespace of the cron job template (default "default")
+      --printjobspec        Print job spec before posting job
   -a, --pullalways          configure the container spec to "PullAlways" the image (default true)
       --shell string        command shell (default "sh")
-  -t, --template string     cron job template name
+  -t, --template string     cron job / job template name
       --timeout duration    timeout for Kubernetes operations (default 1m0s)
+      --ttl int32           ttl seconds after finished (how long the job stays in kube until it is deleted)
 
 --template is required
 ```
