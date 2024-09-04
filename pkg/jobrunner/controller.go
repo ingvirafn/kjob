@@ -259,7 +259,8 @@ func (ctrl *JobController) createJob(ctx context.Context, task Job, spec batchv1
 	}
 	// set environment variables (TODO: should not replace, should append)
 	if len(task.Envs) != 0 {
-		// log.Printf("Adding environment variables")
+
+		existingEnvs := spec.Template.Spec.Containers[0].Env
 		newEnvs := make([]corev1.EnvVar, len(task.Envs))
 
 		for i, ee := range task.Envs {
@@ -267,7 +268,9 @@ func (ctrl *JobController) createJob(ctx context.Context, task Job, spec batchv1
 			newEnvs[i] = corev1.EnvVar{Name: ee, Value: os.Getenv(ee)}
 		}
 
-		spec.Template.Spec.Containers[0].Env = newEnvs
+		// Combine existing environment variables with new ones
+		spec.Template.Spec.Containers[0].Env = append(existingEnvs, newEnvs...)
+
 	}
 
 	// override backoff
